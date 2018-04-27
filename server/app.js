@@ -4,8 +4,12 @@ import favicon from 'serve-favicon'
 import logger from 'morgan'
 import bodyParser from 'body-parser'
 import cookieParser from 'cookie-parser'
+import ejwt from 'express-jwt'
+import config from 'config'
 
-import client from './routes/client'
+import publicRouter from './routes/public'
+import privateRouter from './routes/private'
+import clientRouter from './routes/client'
 
 const app = express()
 
@@ -18,8 +22,12 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
 
+app.use('/api', publicRouter)
+app.use('/api', ejwt({secret: config.get('jwt-secret')}), privateRouter)
+
 // Client needs to be the last route handled
-app.use('/', client)
+// ALL OTHER EXPRESS ROUTES GO ABOVE THIS LINE
+app.use('/', clientRouter)
 
 app.use((req, res, next) => {
   let err = new Error('Not Found')
